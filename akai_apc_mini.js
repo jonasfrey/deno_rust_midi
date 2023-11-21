@@ -11,8 +11,8 @@ midi_out.openPort(1);
 // midi_out.sendMessage([0x90, 0, 2]);
 // midi_out.sendMessage([0x90, 64, 0]);
 // midi_out.sendMessage([0x90, 127, 1]);
-for(let n1 = 0; n1 < 100; n1+=1){
-  await f_sleep_ms(12);//the minimum delay required to get a working update of the state// ca. 83 fps
+for(let n1 = 0; n1 < 10000; n1+=1){
+  await f_sleep_ms(11);//the minimum delay required to get a working update of the state// ca. 83 fps
   for(let n = 0; n< 64; n+=1){
     midi_out.sendMessage([0x90, n,[1,3,5][parseInt(Math.random()*3)]]);
   
