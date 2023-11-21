@@ -2,7 +2,7 @@ import {f_o_html_from_o_js} from "https://deno.land/x/f_o_html_from_o_js@1.4/mod
 
 import {
     O_vec2
-} from "https://deno.land/x/vector@0.7/mod.js"
+} from "https://deno.land/x/vector@0.8/mod.js"
 
 import {
     f_sleep_ms, 
@@ -24,6 +24,8 @@ import {
     f_on_socket_message,
     f_update_o_state
 } from "./functions.module.js"
+
+
 
 
 let o_state = {
@@ -104,17 +106,12 @@ let o_game_object__snake = new O_game_object(
             this.a_o_game_object = [];
         }
         if((o_state.n_render_id % this.n_render_modulo) == 0){
-            let o_trn2 = this.o_trn.add(this.o_trn__speed)//.mul(0.1)); if we use sub integer values we have problems with collisions happening on same field multiple times
-            this.o_trn = new O_vec2(
-                (o_trn2.n_x) % o_state.o_scl__canvas.n_x,
-                (o_trn2.n_y) % o_state.o_scl__canvas.n_y,
+            
+            this.o_trn = this.o_trn.add(this.o_trn__speed).wrap(//.mul(0.1)); if we use sub integer values we have problems with collisions happening on same field multiple times
+                new O_vec2(0), 
+                o_state.o_scl__canvas
             );
-            if(this.o_trn.n_x < 0){
-                this.o_trn.n_x = o_state.o_scl__canvas.n_x - this.o_trn.n_x
-            }
-            if(this.o_trn.n_y < 0){
-                this.o_trn.n_y = o_state.o_scl__canvas.n_y - this.o_trn.n_y
-            }
+
             if(this.o_trn.to_int().toString() != this.o_trn_last.to_int().toString()){
     
                 // console.log(this.o_trn.toString())
@@ -138,7 +135,7 @@ let o_game_object__snake = new O_game_object(
                             o_trn = this.o_trn_last; 
                         }
                         let o = new O_game_object(
-                            new O_vec2(...o_trn.a_n_comp),
+                            o_trn.a_n_comp.clone(),
                             ()=>{},
                             ()=>{},
                             this.o_color
@@ -161,7 +158,7 @@ let o_game_object__snake = new O_game_object(
                     n_idx_reverse >=0;
                     n_idx_reverse-=1
                 ){
-                    let o_trn_before = new O_vec2(...this.o_trn_last.a_n_comp);
+                    let o_trn_before = this.o_trn_last.clone()
                     if(n_idx_reverse > 0){
                         o_trn_before = new O_vec2(
                             ...this.a_o_game_object[n_idx_reverse-1].o_trn.a_n_comp
@@ -171,7 +168,8 @@ let o_game_object__snake = new O_game_object(
                 }
             }
     
-            this.o_trn_last = new O_vec2(...this.o_trn.a_n_comp);
+            this.o_trn_last = this.o_trn.clone()
+            
         }
 
     },
@@ -360,6 +358,7 @@ let f_update_midi_screen = function(){
     a_n_u32__image__last.set(a_n_u32__image);
 
 }
+
 let f_render = function(){
     o_state.n_render_id += 1;
     // for(let n = 0; n<o_state.o_scl__canvas.compsmul(); n+=1){
@@ -385,6 +384,22 @@ let f_render = function(){
         new Uint8ClampedArray(a_n_u32__image.buffer),
         ...o_state.o_scl__canvas.a_n_comp
     );
+    // let s_text = 'Hello World!';
+    // let o_trn = new O_vec2(
+    //     o_state.n_render_id*0.001
+    // );
+    // o_socket.send(
+    //     JSON.stringify(
+    //         new O_socket_message(
+    //             'f_update_o_state',
+    //             [
+    //                 'a_n_u8_midi_message_sent_last',
+    //                 a_n_u8_message
+    //             ]
+    //         )
+    //     )
+    // )
+
     // console.log(o_image_data)
 
     o_state.o_ctx.putImageData(o_image_data, 0, 0);

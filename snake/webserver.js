@@ -5,6 +5,12 @@ import {
 } from "https://raw.githubusercontent.com/jonasfrey/handyhelpers/main/localhost/module.js" 
 // from "https://deno.land/x/handyhelpers@1.5/mod.js"
 
+import { Font } from "https://deno.land/x/font/mod.ts";
+// Read the font data.
+const a_n_u8__font = await Deno.readFile("./CG pixel 4x5.ttf");
+// Parse it into the font type.
+const o_font = new Font(a_n_u8__font);
+
 import { midi } from "https://deno.land/x/deno_midi/mod.ts";
 
 import {
@@ -71,6 +77,25 @@ let f_update_o_state_proxy = function(
         if(o_midi_output.open_port){
             o_midi_output.sendMessage(a_n_u8_message)
         }
+    }
+    if(s_prop == 'o_text_rasterized'){
+        
+        // Rasterize and get the layout metrics for the letter 'g' at 17px.
+        let { metrics, bitmap } = o_font.rasterize(v?.s_text, v?.n_y_px);
+        
+        let o_text_rasterized = {
+            o_metrics: metrics, 
+            a_n__bitmap: bitmap
+        } 
+        o_socket.send(
+            JSON.stringify(
+                new O_socket_message(
+                    'f_update_o_state', 
+                    ['o_text_rasterized', o_text_rasterized]
+                )
+            )
+        );
+
     }
     return f_update_o_state(...arguments)
 }
