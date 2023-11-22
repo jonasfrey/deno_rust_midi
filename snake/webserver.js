@@ -5,11 +5,8 @@ import {
 } from "https://raw.githubusercontent.com/jonasfrey/handyhelpers/main/localhost/module.js" 
 // from "https://deno.land/x/handyhelpers@1.5/mod.js"
 
-import { Font } from "https://deno.land/x/font/mod.ts";
-// Read the font data.
-const a_n_u8__font = await Deno.readFile("./CG pixel 4x5.ttf");
-// Parse it into the font type.
-const o_font = new Font(a_n_u8__font);
+
+
 
 import { midi } from "https://deno.land/x/deno_midi/mod.ts";
 
@@ -21,6 +18,7 @@ import {
     f_update_o_state, 
     f_on_socket_message
 } from "./functions.module.js"
+import { f_o_rasterized_text } from "./test.js";
 
 
 const o_midi_input = new midi.Input();
@@ -39,7 +37,7 @@ let f_update_o_state_proxy = function(
     s_prop, 
     v
 ){
-    console.log(s_prop)
+    // console.log(s_prop)
     if(s_prop == 's_midi_port_device'){
         let n_idx = o_state.a_s_midi_port_device.indexOf(v);
         if(o_midi_input.open_port){
@@ -73,28 +71,25 @@ let f_update_o_state_proxy = function(
     }
     if(s_prop == 'a_n_u8_midi_message_sent_last'){
         let a_n_u8_message = new Uint8Array(v);
-        console.log(a_n_u8_message);
+        // console.log(a_n_u8_message);
         if(o_midi_output.open_port){
             o_midi_output.sendMessage(a_n_u8_message)
         }
     }
-    if(s_prop == 'o_text_rasterized'){
-        
-        // Rasterize and get the layout metrics for the letter 'g' at 17px.
-        let { metrics, bitmap } = o_font.rasterize(v?.s_text, v?.n_y_px);
-        
-        let o_text_rasterized = {
-            o_metrics: metrics, 
-            a_n__bitmap: bitmap
-        } 
-        o_socket.send(
-            JSON.stringify(
-                new O_socket_message(
-                    'f_update_o_state', 
-                    ['o_text_rasterized', o_text_rasterized]
+    if(s_prop == 'o_rasterized_text'){
+        console.log(v)
+        let o_rasterized_text = f_o_rasterized_text(v.s_text, v.n_y_px);
+        console.log(o_rasterized_text)
+        for(let o_socket of o_state.a_o_socket){
+            o_socket.send(
+                JSON.stringify(
+                    new O_socket_message(
+                        'f_update_o_state', 
+                        ['o_rasterized_text', o_rasterized_text]
+                    )
                 )
-            )
-        );
+            );
+        }   
 
     }
     return f_update_o_state(...arguments)
@@ -156,7 +151,7 @@ Deno.serve(async (req) => {
             JSON.stringify(
                 new O_socket_message(
                     'f_render_gui_comp', 
-                    ['o_js__a_s_midi_port_devices']
+                    ['o_js__a_s_midi_port_device']
                 )
             )
         );

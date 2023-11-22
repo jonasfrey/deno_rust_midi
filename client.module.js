@@ -30,7 +30,7 @@ window.o_state = {
 
 console.log(o_state.o_inoutput)
 let o_gui = {
-    o_js__a_s_midi_port_devices: null, 
+    o_js__a_s_midi_port_device: null, 
     o_js__o_inoutput: null
 }
 o_gui.o_js__o_inoutput = {
@@ -51,10 +51,11 @@ o_gui.o_js__o_inoutput = {
         }
     }
 }
-o_gui.o_js__a_s_midi_port_devices = {
+o_gui.o_js__a_s_midi_port_device = {
     f_o_js: function(){
         console.log('render')
         return {
+            style: "position: absolute; top:0; left: 0;z-index:1;",
             a_o: [
                 ...o_state.a_s_midi_port_device.map(s=>{
                     console.log(s)
@@ -133,7 +134,7 @@ let o_js__all= {
                         )
                     }
                 },
-                o_gui.o_js__a_s_midi_port_devices, 
+                o_gui.o_js__a_s_midi_port_device, 
                 o_gui.o_js__o_inoutput
             ],
         }

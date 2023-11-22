@@ -8,9 +8,10 @@ const midi_out = new midi.Output();
 console.log(midi_out.getPorts());
 
 midi_out.openPort(1);
+
 // midi_out.sendMessage([0x90, 0, 2]);
 // midi_out.sendMessage([0x90, 64, 0]);
-// midi_out.sendMessage([0x90, 127, 1]);
+// midi_out.sendMessage([0x90, 82, 4]);
 for(let n1 = 0; n1 < 10000; n1+=1){
   await f_sleep_ms(11);//the minimum delay required to get a working update of the state// ca. 83 fps
   for(let n = 0; n< 64; n+=1){
@@ -18,6 +19,7 @@ for(let n1 = 0; n1 < 10000; n1+=1){
   
   }
 }
+
 
 
 // for(let n = 0; n< 255; n+=1){

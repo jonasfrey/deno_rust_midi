@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
             JSON.stringify(
                 new O_socket_message(
                     'f_render_gui_comp', 
-                    ['o_js__a_s_midi_port_devices']
+                    ['o_js__a_s_midi_port_device']
                 )
             )
         );

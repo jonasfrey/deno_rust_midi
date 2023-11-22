@@ -26,8 +26,6 @@ import {
 } from "./functions.module.js"
 
 
-
-
 let o_state = {
     a_s_midi_port_device: [], 
     a_o_inoutput: [], 
@@ -80,63 +78,74 @@ class O_game_object{
     constructor(
         o_trn, 
         f_render, 
-        f_collision, 
         o_color
     ){
         this.o_trn = o_trn, 
         this.f_render = f_render, 
-        this.f_collision = f_collision, 
         this.o_color = o_color
     }
 }
-let o_game_object__snake = new O_game_object(
-    new O_vec2(0),
-    function(){
-        if(!this.n_render_modulo){
-            this.n_render_modulo = 10; // every tenth frame, can be used as speed
-        }
-        // debugger
-        if(!this.o_trn_last){
-            this.o_trn_last = new O_vec2(this.o_trn)
-        }
-        if(!this.o_trn__speed){
-            this.o_trn__speed = new O_vec2(1,0);
-        }
-        if(!this.a_o_game_object){
-            this.a_o_game_object = [];
-        }
-        if((o_state.n_render_id % this.n_render_modulo) == 0){
-            
-            this.o_trn = this.o_trn.add(this.o_trn__speed).wrap(//.mul(0.1)); if we use sub integer values we have problems with collisions happening on same field multiple times
-                new O_vec2(0), 
-                o_state.o_scl__canvas
-            );
-
-            if(this.o_trn.to_int().toString() != this.o_trn_last.to_int().toString()){
+let f_spawn_snake = function(){
+    o_state.o_game_object__snake = new O_game_object(
+        new O_vec2(0),
+        function(){
+            if(!this.n_render_modulo){
+                this.n_render_modulo = 10; // every tenth frame, can be used as speed
+            }
+            // debugger
+            if(!this.o_trn_last){
+                this.o_trn_last = this.o_trn.clone()
+            }
+            if(!this.o_trn__speed){
+                this.o_trn__speed = new O_vec2(1,0);
+            }
+            if(!this.a_o_game_object){
+                this.a_o_game_object = [];
+            }
+            if((o_state.n_render_id % this.n_render_modulo) == 0){
+                
+                this.o_trn = this.o_trn.add(this.o_trn__speed)
+                .wrap(//.mul(0.1)); if we use sub integer values we have problems with collisions happening on same field multiple times
+                    new O_vec2(0), 
+                    o_state.o_scl__canvas
+                );
     
-                // console.log(this.o_trn.toString())
+                    // console.log(this.o_trn.toString())
                 let o_game_object__collided_with = o_state.a_o_game_object.find(
                     o=>{
                         if(o == this){return false}
                         return o.o_trn.to_int().toString() == this.o_trn.to_int().toString();
                     }
                 )
+                
                 if(o_game_object__collided_with){
                     let n_idx = o_state.a_o_game_object__food.indexOf(o_game_object__collided_with);
                     if(n_idx == -1){
-                        console.log('game ovber')
-                        debugger
+                        let s_text = 'GAME OVER ! ';
+                        o_socket.send(
+                            JSON.stringify(
+                                new O_socket_message(
+                                    'f_update_o_state',
+                                    [
+                                        'o_rasterized_text',
+                                        {
+                                            s_text: s_text, 
+                                            n_y_px: 5,
+                                        }
+                                    ]
+                                )
+                            )
+                        )
                     }else{
-            
+                        console.log(this.a_o_game_object)
                         let o_trn = this.a_o_game_object?.at(-1)?.o_trn;
-                        
                         // console.log(this.a_o_game_object)
+                        // debugger
                         if(!o_trn){
                             o_trn = this.o_trn_last; 
                         }
                         let o = new O_game_object(
-                            o_trn.a_n_comp.clone(),
-                            ()=>{},
+                            o_trn.clone(),
                             ()=>{},
                             this.o_color
                         );
@@ -160,25 +169,21 @@ let o_game_object__snake = new O_game_object(
                 ){
                     let o_trn_before = this.o_trn_last.clone()
                     if(n_idx_reverse > 0){
-                        o_trn_before = new O_vec2(
-                            ...this.a_o_game_object[n_idx_reverse-1].o_trn.a_n_comp
-                        );
+                        o_trn_before = this.a_o_game_object[n_idx_reverse-1].o_trn.clone()
                     }
                     this.a_o_game_object[n_idx_reverse].o_trn = o_trn_before;
                 }
+        
+                this.o_trn_last = this.o_trn.clone()
+                
             }
     
-            this.o_trn_last = this.o_trn.clone()
-            
-        }
+        },
+        o_color__red
+    )
+    o_state.a_o_game_object.push(o_state.o_game_object__snake);
+}
 
-    },
-    function(){
-
-    },
-    o_color__red
-)
-o_state.a_o_game_object.push(o_game_object__snake);
 
 // Function to handle keydown events
 function handleKeyDown(event) {
@@ -186,16 +191,16 @@ function handleKeyDown(event) {
     // to identify which key was pressed
     switch (event.key) {
       case "a":
-        o_game_object__snake.o_trn__speed = new O_vec2(-1,0);
+        o_state.o_game_object__snake.o_trn__speed = new O_vec2(-1,0);
         break;
       case "s":
-        o_game_object__snake.o_trn__speed = new O_vec2(0,1);
+        o_state.o_game_object__snake.o_trn__speed = new O_vec2(0,1);
         break;
       case "d":
-        o_game_object__snake.o_trn__speed = new O_vec2(1,0);
+        o_state.o_game_object__snake.o_trn__speed = new O_vec2(1,0);
         break;
       case "w":
-        o_game_object__snake.o_trn__speed = new O_vec2(0,-1);
+        o_state.o_game_object__snake.o_trn__speed = new O_vec2(0,-1);
         break;
       default:
         // Handle other keys if needed
@@ -241,7 +246,6 @@ let f_spawn_food = function(){
             // console.log(this.o_trn.toString())
     
         },
-        ()=>{},
         o_color__green
     )
     o_state.a_o_game_object.push(o_game_object__food);
@@ -250,7 +254,7 @@ let f_spawn_food = function(){
 f_spawn_food();
 
 let o_gui = {
-    o_js__a_s_midi_port_devices: null, 
+    o_js__a_s_midi_port_device: null, 
     o_js__o_inoutput: null
 }
 o_gui.o_js__o_inoutput = {
@@ -271,10 +275,11 @@ o_gui.o_js__o_inoutput = {
         }
     }
 }
-o_gui.o_js__a_s_midi_port_devices = {
+o_gui.o_js__a_s_midi_port_device = {
     f_o_js: function(){
         // console.log('render')
         return {
+            style: "position: absolute; top:0; left: 0;z-index:1;background:transparent;",
             a_o: [
                 ...o_state.a_s_midi_port_device.map(s=>{
                     console.log(s)
@@ -338,7 +343,7 @@ let f_update_midi_screen = function(){
             n_y = 7-n_y; 
             let n_idx_akai = n_x + n_y*8;
             let a_n_u8_message = [0x90, n_idx_akai, n_color_midi]
-            console.log(a_n_u8_message)
+            // console.log(a_n_u8_message)
             o_socket.send(
                 JSON.stringify(
                     new O_socket_message(
@@ -359,7 +364,34 @@ let f_update_midi_screen = function(){
 
 }
 
+let o_s_controloption_a_n_midinum = {
+    'up': [64,7],
+    'down': [65,71],
+    'left': [66,70],
+    'right': [67,98],
+    'restart': [82]
+}
 let f_render = function(){
+    // light up the arrow keys
+    [
+        [0x90, 64, 1],
+        [0x90, 65, 1],
+        [0x90, 66, 1],
+        [0x90, 67, 1],
+    ].map(a=>{
+        o_socket.send(
+            JSON.stringify(
+                new O_socket_message(
+                    'f_update_o_state',
+                    [
+                        'a_n_u8_midi_message_sent_last',
+                        a
+                    ]
+                )
+            )
+        )
+    })
+
     o_state.n_render_id += 1;
     // for(let n = 0; n<o_state.o_scl__canvas.compsmul(); n+=1){
     //     let o_color = a_o_color[parseInt(Math.random()*a_o_color.length)]
@@ -369,7 +401,22 @@ let f_render = function(){
     a_n_u32__image = new Uint32Array(o_state.o_scl__canvas.compsmul());
     for(let o_game_object of o_state.a_o_game_object){
         o_game_object.f_render();
-        let n_idx = o_game_object.o_trn.to_index(o_state.o_scl__canvas);
+        if(
+            o_game_object.o_trn.n_x > o_state.o_scl__canvas.n_x 
+            ||
+            o_game_object.o_trn.n_y > o_state.o_scl__canvas.n_y 
+            ||
+            o_game_object.o_trn.n_x < 0
+            ||
+            o_game_object.o_trn.n_y < 0 
+
+        ){
+            continue
+            // dont even try to render when not inside canvas
+        }
+        // console.log('o_game_object.o_trn')
+        // console.log(o_game_object.o_trn)
+        let n_idx = o_game_object.o_trn.to_int().to_index(o_state.o_scl__canvas);
         // console.log(n_idx)
         a_n_u32__image[n_idx] = o_game_object.o_color.n_hex_abgr
     }
@@ -384,21 +431,7 @@ let f_render = function(){
         new Uint8ClampedArray(a_n_u32__image.buffer),
         ...o_state.o_scl__canvas.a_n_comp
     );
-    // let s_text = 'Hello World!';
-    // let o_trn = new O_vec2(
-    //     o_state.n_render_id*0.001
-    // );
-    // o_socket.send(
-    //     JSON.stringify(
-    //         new O_socket_message(
-    //             'f_update_o_state',
-    //             [
-    //                 'a_n_u8_midi_message_sent_last',
-    //                 a_n_u8_message
-    //             ]
-    //         )
-    //     )
-    // )
+
 
     // console.log(o_image_data)
 
@@ -419,21 +452,73 @@ let f_update_o_state_proxy = function(
     s_prop, 
     v
 ){
+    if(s_prop == 'o_rasterized_text'){
+
+        let o_rasterized_text = v;
+        let o =o_rasterized_text;
+        console.log(o)
+        let s = ''
+        for(let n = 0; n<o.a_n__bitmap.length; n+=1){
+            if(n%o.o_scl.n_x == 0){
+                console.log(s);
+                s = ''
+            }
+            s+=(o.a_n__bitmap[n]) ? 'x': ' ';
+        }
+        console.log(s);
+        let a_o = o_rasterized_text.a_n__bitmap.map(
+                (n_val, n_idx)=>{
+                    if(n_val == 0) {return false} 
+                    let o_scl = new O_vec2(
+                        o_rasterized_text.o_scl
+                    )
+                    // let o_trn = o_scl.from_index(n_idx);
+                    let n_x = n_idx % o_scl.n_x; 
+                    let n_y = parseInt(n_idx / o_scl.n_x);
+                    let o_trn = new O_vec2(n_x, n_y)
+                    // debugger
+                    return new O_game_object(
+                        o_trn.clone(),
+                        function(){
+                            this.o_trn = this.o_trn
+                            .add(
+                                -0.3, 
+                                0// Math.sin((o_state.n_render_id*0.00000001)*.5+.5)*3
+                            )
+                            .wrap(
+                                new O_vec2(0), 
+                                o_scl,
+                            )
+                            // console.log(this.o_trn)
+                        }, 
+                        (n_val >0)?o_color__orange : o_color__black
+                    )
+
+                }
+            ).flat().filter(v=>v)
+        o_state.a_o_game_object = a_o
+        
+    }
     if(s_prop == 'o_midi_message_input'){
 
         if(v?.type == 144){
-            if( v?.data?.note == 70){
-                o_game_object__snake.o_trn__speed = new O_vec2(-1,0);
+            if( o_s_controloption_a_n_midinum.down.includes(v?.data?.note)){
+                o_state.o_game_object__snake.o_trn__speed = new O_vec2(0,1);
             }
-            if( v?.data?.note == 71){
-                o_game_object__snake.o_trn__speed = new O_vec2(0,1);
-            }
-            if( v?.data?.note == 98){
-                o_game_object__snake.o_trn__speed = new O_vec2(1,0);
-            }
-            if( v?.data?.note == 7){
-                o_game_object__snake.o_trn__speed = new O_vec2(0,-1);
+            if( o_s_controloption_a_n_midinum.up.includes(v?.data?.note)){
+                o_state.o_game_object__snake.o_trn__speed = new O_vec2(0,-1);
             }   
+            if( o_s_controloption_a_n_midinum.left.includes(v?.data?.note)){
+                o_state.o_game_object__snake.o_trn__speed = new O_vec2(-1,0);
+            }
+            if( o_s_controloption_a_n_midinum.right.includes(v?.data?.note)){
+                o_state.o_game_object__snake.o_trn__speed = new O_vec2(1,0);
+            }
+            if( o_s_controloption_a_n_midinum.restart.includes(v?.data?.note)){
+                o_state.a_o_game_object = []
+                f_spawn_snake()
+                f_spawn_food()
+            }
         }
         o_socket.send(
             JSON.stringify(
@@ -454,11 +539,10 @@ let f_update_o_state_proxy = function(
             )
             o_state.a_o_inoutput.push(o_inoutput)
         }
-        console.log(v)
+        // console.log(v)
         o_state.o_inoutput = o_inoutput
         
         o_gui.o_js__o_inoutput._f_render();
-        console.log(v)
     }
 
     return f_update_o_state(...arguments)
@@ -492,7 +576,7 @@ let o_js__all= {
                         )
                     }
                 },
-                o_gui.o_js__a_s_midi_port_devices, 
+                o_gui.o_js__a_s_midi_port_device, 
                 o_gui.o_js__o_inoutput
             ],
         }
@@ -536,6 +620,35 @@ o_socket.addEventListener('open', function (event) {
     // debugger
     // let a_o_state = JSON.parse(event.data);
     // o_state.a_o_state = a_o_state;
+
+
+    let s_text = 'PRESS START! ';
+    o_socket.send(
+        JSON.stringify(
+            new O_socket_message(
+                'f_update_o_state',
+                [
+                    'o_rasterized_text',
+                    {
+                        s_text: s_text, 
+                        n_y_px: 5,
+                    }
+                ]
+            )
+        )
+    )
+    o_socket.send(
+        JSON.stringify(
+            new O_socket_message(
+                'f_update_o_state',
+                [
+                    'a_n_u8_midi_message_sent_last',
+                    [0x90, o_s_controloption_a_n_midinum.restart[0], 1]
+                ]
+            )
+        )
+    )
+
 });
 
 o_socket.addEventListener('message', function (event) {
